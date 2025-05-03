@@ -1,0 +1,53 @@
+name: CodeQL – OpenDMARC
+
+# Run on all branches (push & PR) and once a week
+on:
+  push:          # any branch, any tag
+  pull_request:  # any target branch
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read          # let Actions read code
+  security-events: write  # upload SARIF results
+
+jobs:
+  analyze:
+    name: CodeQL / ${{ matrix.language }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['c-cpp']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Initialise the CodeQL CLI
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      # Try an automatic build first (usually works for Autotools/C projects)
+      - name: Autobuild (C/C++)
+        uses: github/codeql-action/autobuild@v3
+
+      # ───── OPTIONAL ─────
+      # If the step above fails, comment it out and
+      # un-comment the custom build commands below:
+      #
+      # - name: Manual build
+      #   run: |
+      #     ./bootstrap           # if the project uses bootstrap; else skip
+      #     ./configure --enable-debug
+      #     make -j$(nproc)
+      #
+      # ──────────────────────
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+
